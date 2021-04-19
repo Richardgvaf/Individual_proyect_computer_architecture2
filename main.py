@@ -1,5 +1,6 @@
-from model.mainModel import *
+from view.mainView import *
 
-x = mainModel()
-print(x.f())
 
+root = tk.Tk()
+app = Application(master=root)
+app.mainloop()

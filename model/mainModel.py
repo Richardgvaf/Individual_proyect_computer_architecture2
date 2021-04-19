@@ -1,14 +1,18 @@
-from model.singletonView import *
+from model.processor import *
+import threading
+
 class mainModel():
-	i = 12345
-	def f(self):
-		s1 = Singleton()
-		s2 = Singleton()
-		if id(s1) == id(s2):
-		    print("Singleton works, both variables contain the same instance.")
-		else:
-		    print("Singleton failed, variables contain different instances.")
-		
-		s1.some_business_logic()
+	def __init__(self):
+		self._semaforo = threading.Semaphore(1);
+
+	def main_model(self):
+		processor1 = threading.Thread(target=mainProcessor, args=("1",self._semaforo,))
+		processor1.start()
+		processor2 = threading.Thread(target=mainProcessor, args=("2",self._semaforo,))
+		processor2.start()
+		processor3 = threading.Thread(target=mainProcessor, args=("3",self._semaforo,))
+		processor3.start()
+		processor4 = threading.Thread(target=mainProcessor, args=("4",self._semaforo,))
+		processor4.start()
 		return 'hello world Test'
 
