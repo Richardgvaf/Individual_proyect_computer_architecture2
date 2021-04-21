@@ -1,7 +1,6 @@
 import random
 class cacheL1():
-	def __init__(self,proc_number):
-		self.proc_number = proc_number
+	def __init__(self):
 		self._data1 = {'state':'I','mem_dir':'0','data': '0x0000'}
 		self._data1 = {'state':'I','mem_dir':'0','data': '0x0000'}
 
