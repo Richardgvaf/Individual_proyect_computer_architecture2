@@ -1,6 +1,6 @@
 import tkinter as tk
 from model.processor import *
-import threading
+import queue
 from model.mainModel import *
 
 
@@ -8,8 +8,9 @@ class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
         #Start the main model to int threads
+        self._interface_queue = queue.Queue() 
         self._main_model = mainModel()
-        self._main_model.main_model();
+        self._main_model.main_model(interface_queue=self._interface_queue);
         
         self._processors = [0,0,0,0]
         self.master = master
@@ -29,7 +30,10 @@ class Application(tk.Frame):
     
     def say_hi(self):
         print("hi there, everyone!")
-    @property
+    def constant_check():
+        while True:
+            print("leer cola")
+            time.sleep(30)
     def display_processor(self,processor_number):
         x = 60
         y = 40

@@ -4,33 +4,77 @@ import threading
 import random
 def generateInstruction(proc_number,probability):
 	print("probablidad del hilo: "+str(proc_number)+"   es: " + str(probability))
-	n = random.randint(0,50)
-	if n < (probability*100):
-		print("store")
+	#Calculate the probability of each one and scale the result for a factor of 2.27 to complete one hundred percent
+	probability1 = calcProbability(2,4)*100*2.27
+	probability2 = calcProbability(3,4)*100*2.27
+	probability3 = calcProbability(4,4)*100*2.27
+	
+	calc_prob = probability1
+	store_prob  = calc_prob+probability2
+	read_prob  = store_prob + probability3
+	random_value = random.randint(0,99)
+	print("The random value is "+str(random_value))
+	print("the probability of lambda = 2 and k = 4 is: "+str(store_prob))
+	print("the probability of lambda = 3 and k = 4 is: "+str(calc_prob))
+	print("the probability of lambda = 4 and k = 4 is: "+str(read_prob))
+
+	instruction = {}
+	instruction.setdefault("proc_number",str(proc_number))
+	if random_value < calc_prob:
+		instruction.setdefault("action","calc")
+	elif random_value < store_prob:
+		instruction.setdefault("action","write")
+		random_dir = random.randint(0,7)
+		instruction.setdefault("mem_dir",str(random_dir))
+		random_data = hex(random.randint(0,1048575))
+		instruction.setdefault("data",str(random_data))
 	else:
-		print("read")
+		instruction.setdefault("action","read")
+		random_dir = random.randint(0,7)
+		instruction.setdefault("mem_dir",str(random_dir))
+	return instruction
 
+def notify(instruction,send_way1,send_way2,send_way3):
+	if instruction == "write" or instruction == "read":
+		send_way1.put(instruction)
+		send_way2.put(instruction)
+		send_way3.put(instruction)
 
+def readNotify(recive_way1,recive_way2,recive_way3):
+	print("read")
 
-def mainProcessor(proc_number,semaforo):
+def writeThrough(semaphore):
+	semaphore.acquire();
+	print("Escribiendo en memoria L2");
+	time.sleep(5)
+	semaphore.release();
+def writeThrough_l2():
+	print("write_through_l2")
+	time.sleep(10)
+def calcProbability(lamb,k):
+	probability  = math.exp( -lamb )*((lamb**k)/(math.factorial(math.ceil(k))))
+	return probability
+
+def mainProcessor(proc_number,semaforo,send_way1,send_way2,send_way3, recive_way1,recive_way2,recive_way3):
 	x = 0
 	lamb = int(proc_number)
 	while x < 6:
-		probability  = math.exp( -lamb )*((lamb**x)/(math.factorial(math.ceil(x))))
+		#calculate the probability in each cycle that a delay appears 
+		probability  = calcProbability(lamb,x)
 		time_to_slep = 10-20*probability
-		#print("Thread "+proc_number+": whit the time "+str(time_to_slep))
-		generateInstruction(proc_number,probability)
-		if(proc_number == "1"):
-			print(" probability                       "+str(probability)+" try "+str(x)+" buajjajaajaj")
-		#time.sleep(0.1)
+		
+		instruction = generateInstruction(proc_number,probability)
+		print(instruction)
 		time.sleep(time_to_slep)
+		notify(instruction,send_way1,send_way2,send_way3)
+		
+		#reset the cycle
 		if x == 5:
 			x = 0
-		else:
-			x += 0.1
-			x = round(x,1)
+		x += 0.1
+		x = round(x,1)
 	print(proc_number)
-	#semaforo.acquire();
+	#semaforo
 	print("Thread "+proc_number+" : start")
 	time.sleep(2)
 	print("Thread "+proc_number+" : finishing")
