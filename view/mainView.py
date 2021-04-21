@@ -14,9 +14,11 @@ class Application(tk.Frame):
         self._from_P2 = queue.Queue()
         self._from_P3 = queue.Queue()
 
+        self._from_memory = queue.Queue()
+
         self._interface_queue = queue.Queue() 
         self._main_model = mainModel()
-        self._main_model.main_model(from_P0=self._from_P0,from_P1=self._from_P1,from_P2=self._from_P2,from_P3=self._from_P3);
+        self._main_model.main_model(from_P0=self._from_P0,from_P1=self._from_P1,from_P2=self._from_P2,from_P3=self._from_P3,memory=self._from_memory);
         self._processors = [0,0,0,0]
         self._caches = [0,0,0,0,0,0,0,0]
         self._l2_cache = [0,0,0,0]
@@ -36,9 +38,11 @@ class Application(tk.Frame):
             return "read " + instruction['mem_dir']
         if instruction['action'] == "write":
             return "write " + instruction['mem_dir']+"  "+instruction['data']
+        if instruction['action'] == "calc":
+            return "calc"
 
 
-    def instruction_memory(self,instruction,proc_number):
+    def instruction_memoryl1(self,instruction,proc_number):
         self._caches[proc_number]['text']   = instruction['mem_dir1']+"   "+instruction['state1']+ '  ' + instruction['data1']
         self._caches[proc_number+4]['text'] = instruction['mem_dir2']+"   "+instruction['state2']+ '  ' + instruction['data2']
 
@@ -47,32 +51,59 @@ class Application(tk.Frame):
         if self._from_P0.qsize() != 0:
             instruction = self._from_P0.get()
             if instruction['action'] == 'memory_l1':
-                self.instruction_memory(instruction,0)
+                self.instruction_memoryl1(instruction,0)
             else:
                 self._processors[0]['text'] = self.instruction_processor(instruction)
 
         if self._from_P1.qsize() != 0:
             instruction = self._from_P1.get()
             if instruction['action'] == 'memory_l1':
-                self.instruction_memory(instruction,1)
+                self.instruction_memoryl1(instruction,1)
             else:
                 self._processors[1]['text'] = self.instruction_processor(instruction)
 
         if self._from_P2.qsize() != 0:
             instruction = self._from_P2.get()
             if instruction['action'] == 'memory_l1':
-                self.instruction_memory(instruction,2)
+                self.instruction_memoryl1(instruction,2)
             else:
                 self._processors[2]['text'] = self.instruction_processor(instruction)
         if self._from_P3.qsize() != 0:
             instruction = self._from_P3.get()
             if instruction['action'] == 'memory_l1':
-                self.instruction_memory(instruction,3)
+                self.instruction_memoryl1(instruction,3)
             else:
-                self._processors[3]['text'] = self.instruction_processor(instruction) 
+                self._processors[3]['text'] = self.instruction_processor(instruction)
+
+    def set_memoryL2(self,instruction):
+        self._l2_cache[0]['text']   = instruction['mem_dir1']+"   "+instruction['state1']+ '  ' + instruction['data1']
+        self._l2_cache[1]['text']   = instruction['mem_dir2']+"   "+instruction['state2']+ '  ' + instruction['data2']
+        self._l2_cache[2]['text']   = instruction['mem_dir3']+"   "+instruction['state3']+ '  ' + instruction['data3']
+        self._l2_cache[3]['text']   = instruction['mem_dir4']+"   "+instruction['state4']+ '  ' + instruction['data4']
+
+    def set_memory(self,instruction):
+        self._memory[0]['text']  = instruction['mem_dir1']+"   " + instruction['data1']
+        self._memory[1]['text']  = instruction['mem_dir2']+"   " + instruction['data2']
+        self._memory[2]['text']  = instruction['mem_dir3']+"   " + instruction['data3']
+        self._memory[3]['text']  = instruction['mem_dir4']+"   " + instruction['data4']
+        self._memory[4]['text']  = instruction['mem_dir5']+"   " + instruction['data5']
+        self._memory[5]['text']  = instruction['mem_dir6']+"   " + instruction['data6']
+        self._memory[6]['text']  = instruction['mem_dir7']+"   " + instruction['data7']
+        self._memory[7]['text']  = instruction['mem_dir8']+"   " + instruction['data8']
+
+    def chek_memories(self):
+        if self._from_memory.qsize() != 0:
+            instruction = self._from_memory.get()
+            if instruction['action'] == 'memory_l2':
+                self.set_memoryL2(instruction)
+            if instruction['action'] == 'memory':
+                self.set_memory(instruction)
+
+
     def constant_check(self): 
         while True:
             self.chek_processor()
+            self.chek_memories()
             self.update()
             time.sleep(0.1)   
     def display_background(self):

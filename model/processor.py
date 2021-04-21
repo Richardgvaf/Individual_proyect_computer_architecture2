@@ -33,22 +33,25 @@ def generateInstruction(proc_number,probability):
 	return instruction
 
 def notify(instruction,send_way1,send_way2,send_way3):
-	if instruction == "write" or instruction == "read":
+	if instruction['action'] != "calc":
 		send_way1.put(instruction)
 		send_way2.put(instruction)
 		send_way3.put(instruction)
 
-def readNotify(recive_way1,recive_way2,recive_way3):
-	print("read")
+def readNotify(cache_l1,recive_way1,recive_way2,recive_way3):
+	if recive_way1.qsize() != 0:
+		instruction = recive_way1.get()
+		cache_l1.read_notify(instruction)
+	if recive_way2.qsize() != 0:
+		instruction = recive_way2.get()
+		cache_l1.read_notify(instruction)
+	if recive_way3.qsize() != 0:
+		instruction = recive_way3.get()
+		cache_l1.read_notify(instruction)
 
 def writeL1(instruction, cache_l1):
 	cache_l1.write_l1_value();
 
-def writeThrough(semaphore):
-	semaphore.acquire();
-	print("Escribiendo en memoria L2");
-	time.sleep(5)
-	semaphore.release();
 
 def writeThrough_l2():
 	print("write_through_l2")
@@ -58,14 +61,14 @@ def calcProbability(lamb,k):
 	probability  = math.exp( -lamb )*((lamb**k)/(math.factorial(math.ceil(k))))
 	return probability
 
-def manage_mem_instruction(instruction,cache_l1):
+def manage_mem_instruction(instruction,cache_l1,semaphore, cache_l2):
 	if instruction['action'] == 'write':
 		cache_l1.write_l1_value(instruction = instruction)
 
-def mainProcessor(proc_number,semaforo,send_way1,send_way2,send_way3, recive_way1,recive_way2,recive_way3,interface):
+def mainProcessor(proc_number,semaforo,send_way1,send_way2,send_way3, recive_way1,recive_way2,recive_way3,interface,cache_l2,memory):
 	x = 0
 	lamb = int(proc_number)
-	cache_l1 = cacheL1(interface)
+	cache_l1 = cacheL1(interface,semaforo,cache_l2)
 	while x < 6:
 		#calculate the probability in each cycle that a delay appears 
 		probability  = calcProbability(lamb,x)
@@ -73,11 +76,18 @@ def mainProcessor(proc_number,semaforo,send_way1,send_way2,send_way3, recive_way
 		
 		instruction = generateInstruction(proc_number,probability)
 		interface.put(instruction)
-		manage_mem_instruction(instruction,cache_l1)
-		print("Queue size:  "+str(interface.qsize()))
-		print(instruction)
-		time.sleep(time_to_slep)
+
+		manage_mem_instruction(instruction,cache_l1,semaforo,cache_l2)
+
 		notify(instruction,send_way1,send_way2,send_way3)
+		
+		print(instruction)
+		tiempo = 0
+		while tiempo < time_to_slep:
+			readNotify(cache_l1,recive_way1,recive_way2,recive_way3)
+			time.sleep(0.1)
+			tiempo += 0.1
+		
 		
 		#reset the cycle
 		if x == 5:

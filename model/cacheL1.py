@@ -1,9 +1,14 @@
 import random
+import threading
+import time
 class cacheL1():
-	def __init__(self,interface):
+	def __init__(self,interface,semaphore,cache_l2):
 		self._data1 = {'state':'I','mem_dir':'0','data': '0x0000'}
 		self._data2 = {'state':'I','mem_dir':'0','data': '0x0000'}
 		self._interface = interface
+		self._semaphore = semaphore
+		self._cache_l2  = cache_l2
+		self.notify_interface()
 
 	def get_data1(self):
 		return self._data1
@@ -33,10 +38,24 @@ class cacheL1():
 		self._data2['mem_dir'] = mem_dir
 		self._data2['state']   = state
 		self._data2['data']    = data
-	def alert(self,instruction):
-		if (instruction['action'] == write) and (instruction['mem_dir'] == self._data1['mem_dir']):
+	
+	def read_notify(self,instruction):
+		if (instruction['action'] == 'write') and (instruction['mem_dir'] == self._data1['mem_dir']):
 			#nota falta hacer write trought
-			self.data1['state'] = "I" 
+			if self._data1['state'] == "M":
+				time.sleep(5)
+				print("falta write_trought")
+			self._data1['state'] = 'I' 
+		if (instruction['action'] == 'write') and (instruction['mem_dir'] == self._data2['mem_dir']):
+			#nota falta hacer write trought
+			if self._data2['state'] == 'M':
+				print("falta write_trought")
+			self._data2['state'] = 'I'
+			self.notify_interface()
+	
+	def notify_interface(self):
+		self._interface.put({'action':'memory_l1','data1':self._data1['data'],'state1':self._data1['state'],'data2':self._data2['data'],'state2':self._data2['state'],'mem_dir2':self._data2['mem_dir'],'mem_dir1':self._data1['mem_dir']})
+	
 	def write_l1_value(self,instruction):
 		#if data is in cache l1 overwrite
 		if instruction['mem_dir'] == self._data1['mem_dir']:
@@ -66,7 +85,8 @@ class cacheL1():
 			else:
 				#####falta agregar el write_trought############
 				self.replace_data2(instruction['mem_dir'],"M",instruction['data'])
-		self._interface.put({'action':'memory_l1','data1':self._data1['data'],'state1':self._data1['state'],'data2':self._data2['data'],'state2':self._data2['state'],'mem_dir2':self._data2['mem_dir'],'mem_dir1':self._data1['mem_dir']})
+		self.notify_interface()
+		
 
 	def write_in_cache_l1(self):
 		print("hello")
