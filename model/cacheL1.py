@@ -10,25 +10,24 @@ class cacheL1():
 		self._cache_l2  = cache_l2
 		self.notify_interface()
 
-	def get_data1(self):
-		return self._data1
-	
-	def get_data2(self):
-		return self._data2
-	
-	def set_data1(self,data1):
-		self._data1 = data1;
-	
-	def set_data2(self,data2):
-		self._data2 = data2
-
 	def read_l1_value(self,instruction):
-		if instruction['mem_dir'] == self._data1['mem_dir'] and self._data1['state'] != 'I':
-			return self._data1['data']
-		elif instruction['mem_dir'] == self._data2['mem_dir'] and self._data2['state'] != 'I':
-			return self._data2['data']
-		else:
-			read_l2_value()
+		print("EL tipo es..... :")
+		if (instruction['mem_dir'] == self._data1['mem_dir']) and self._data1['state'] == 'I':
+			data = self._cache_l2.read_l2_value(mem_dir=instruction['mem_dir'])
+			self.replace_data1(instruction['mem_dir'],'S',data)
+		elif instruction['mem_dir'] == self._data2['mem_dir'] and self._data2['state'] == 'I':
+			data = self._cache_l2.read_l2_value(mem_dir=instruction['mem_dir'])
+			self.replace_data2(instruction['mem_dir'],'S',data) 
+		elif (instruction['mem_dir'] != self._data1['mem_dir']) and (instruction['mem_dir'] != self._data2['mem_dir']):
+			if random.randint(0,99) < 50:
+				data = self._cache_l2.read_l2_value(mem_dir=instruction['mem_dir'])
+				self.replace_data1(instruction['mem_dir'],"S",data)
+			else:
+				data = self._cache_l2.read_l2_value(mem_dir=instruction['mem_dir'])
+				self.replace_data2(instruction['mem_dir'],"S",data)
+		self.notify_interface()
+			
+
 	def replace_data1(self,mem_dir,state,data):
 		self._data1['mem_dir'] = mem_dir
 		self._data1['state']   = state
@@ -38,20 +37,34 @@ class cacheL1():
 		self._data2['mem_dir'] = mem_dir
 		self._data2['state']   = state
 		self._data2['data']    = data
+
+	def write_trought(self,instruction):
+		self._semaphore.acquire()
+		time.sleep(5)
+		self._cache_l2.write_l2_value(instruction=instruction)
+		self._semaphore.release()
 	
+	def validate_writing(self,state,data):
+		if data['state'] == 'M':
+			data['state'] = state
+			self.notify_interface()
+			self.write_trought(data)
+		data['state'] = state
+		self.notify_interface()
+
 	def read_notify(self,instruction):
 		if (instruction['action'] == 'write') and (instruction['mem_dir'] == self._data1['mem_dir']):
-			#nota falta hacer write trought
-			if self._data1['state'] == "M":
-				time.sleep(5)
-				print("falta write_trought")
-			self._data1['state'] = 'I' 
+			self.validate_writing('I',self._data1)
+
 		if (instruction['action'] == 'write') and (instruction['mem_dir'] == self._data2['mem_dir']):
-			#nota falta hacer write trought
-			if self._data2['state'] == 'M':
-				print("falta write_trought")
-			self._data2['state'] = 'I'
-			self.notify_interface()
+			self.validate_writing('I',self._data2)
+
+		if (instruction['action'] == 'read') and (instruction['mem_dir'] == self._data1['mem_dir']):
+			self.validate_writing('S',self._data1)
+
+		if (instruction['action'] == 'read') and (instruction['mem_dir'] == self._data2['mem_dir']):
+			self.validate_writing('S',self._data2)
+		
 	
 	def notify_interface(self):
 		self._interface.put({'action':'memory_l1','data1':self._data1['data'],'state1':self._data1['state'],'data2':self._data2['data'],'state2':self._data2['state'],'mem_dir2':self._data2['mem_dir'],'mem_dir1':self._data1['mem_dir']})
@@ -77,23 +90,16 @@ class cacheL1():
 
 		elif (self._data1['state'] == 'M') and (self._data2['state'] == 'S'):
 			self.replace_data2(instruction['mem_dir'],"M",instruction['data'])
+
 		#if both are modified write over L2 and then replace
 		elif (self._data1['state'] == 'M') and (self._data2['state'] == 'M'):
-			if random.randint(0,90) < 50:
-				#####falta agregar el write_trought############
+			if random.randint(0,99) < 50:
+				self.write_trought(self._data1)
 				self.replace_data1(instruction['mem_dir'],"M",instruction['data'])
 			else:
-				#####falta agregar el write_trought############
+				self.write_trought(self._data2)
 				self.replace_data2(instruction['mem_dir'],"M",instruction['data'])
 		self.notify_interface()
 		
 
-	def write_in_cache_l1(self):
-		print("hello")
-
-	def validate_data(self):
-		print("hello")
-
-	def write_in_cache_l2(self):
-		print("hello")
 

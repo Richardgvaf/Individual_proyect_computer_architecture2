@@ -24,7 +24,7 @@ def generateInstruction(proc_number,probability):
 		instruction.setdefault("action","write")
 		random_dir = random.randint(0,7)
 		instruction.setdefault("mem_dir",str(random_dir))
-		random_data = hex(random.randint(0,1048575))
+		random_data = hex(random.randint(0,65535))
 		instruction.setdefault("data",str(random_data))
 	else:
 		instruction.setdefault("action","read")
@@ -42,20 +42,16 @@ def readNotify(cache_l1,recive_way1,recive_way2,recive_way3):
 	if recive_way1.qsize() != 0:
 		instruction = recive_way1.get()
 		cache_l1.read_notify(instruction)
+
 	if recive_way2.qsize() != 0:
 		instruction = recive_way2.get()
 		cache_l1.read_notify(instruction)
+		
 	if recive_way3.qsize() != 0:
 		instruction = recive_way3.get()
 		cache_l1.read_notify(instruction)
 
-def writeL1(instruction, cache_l1):
-	cache_l1.write_l1_value();
 
-
-def writeThrough_l2():
-	print("write_through_l2")
-	time.sleep(10)
 
 def calcProbability(lamb,k):
 	probability  = math.exp( -lamb )*((lamb**k)/(math.factorial(math.ceil(k))))
@@ -63,7 +59,9 @@ def calcProbability(lamb,k):
 
 def manage_mem_instruction(instruction,cache_l1,semaphore, cache_l2):
 	if instruction['action'] == 'write':
-		cache_l1.write_l1_value(instruction = instruction)
+		cache_l1.write_l1_value(instruction = instruction);
+	if instruction['action'] == 'read':
+		cache_l1.read_l1_value(instruction = instruction);
 
 def mainProcessor(proc_number,semaforo,send_way1,send_way2,send_way3, recive_way1,recive_way2,recive_way3,interface,cache_l2,memory):
 	x = 0
@@ -72,7 +70,7 @@ def mainProcessor(proc_number,semaforo,send_way1,send_way2,send_way3, recive_way
 	while x < 6:
 		#calculate the probability in each cycle that a delay appears 
 		probability  = calcProbability(lamb,x)
-		time_to_slep = 10-20*probability
+		time_to_slep = 20-40*probability
 		
 		instruction = generateInstruction(proc_number,probability)
 		interface.put(instruction)
@@ -99,4 +97,4 @@ def mainProcessor(proc_number,semaforo,send_way1,send_way2,send_way3, recive_way
 	print("Thread "+proc_number+" : start")
 	time.sleep(2)
 	print("Thread "+proc_number+" : finishing")
-	#semaforo.release();
+	#semaforo;

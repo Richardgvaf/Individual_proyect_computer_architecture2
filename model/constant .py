@@ -1,0 +1,6 @@
+ACTION = 'action'
+STATE = 'state'
+DATA = 'data'
+READ = 'read'
+WRITE = 'write'
+MEM_DIR = 'mem_dir'

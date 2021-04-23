@@ -82,6 +82,7 @@ class Application(tk.Frame):
         self._l2_cache[3]['text']   = instruction['mem_dir4']+"   "+instruction['state4']+ '  ' + instruction['data4']
 
     def set_memory(self,instruction):
+        print("values had change")
         self._memory[0]['text']  = instruction['mem_dir1']+"   " + instruction['data1']
         self._memory[1]['text']  = instruction['mem_dir2']+"   " + instruction['data2']
         self._memory[2]['text']  = instruction['mem_dir3']+"   " + instruction['data3']
