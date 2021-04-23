@@ -13,20 +13,30 @@ class cacheL1():
 	def read_l1_value(self,instruction):
 		print("EL tipo es..... :")
 		if (instruction['mem_dir'] == self._data1['mem_dir']) and self._data1['state'] == 'I':
-			data = self._cache_l2.read_l2_value(mem_dir=instruction['mem_dir'])
-			self.replace_data1(instruction['mem_dir'],'S',data)
+			self.read_through(instruction['mem_dir'],'S',self._data1)
+
 		elif instruction['mem_dir'] == self._data2['mem_dir'] and self._data2['state'] == 'I':
-			data = self._cache_l2.read_l2_value(mem_dir=instruction['mem_dir'])
-			self.replace_data2(instruction['mem_dir'],'S',data) 
+			self.read_through(instruction['mem_dir'],'S',self._data2) 
+			
 		elif (instruction['mem_dir'] != self._data1['mem_dir']) and (instruction['mem_dir'] != self._data2['mem_dir']):
 			if random.randint(0,99) < 50:
-				data = self._cache_l2.read_l2_value(mem_dir=instruction['mem_dir'])
-				self.replace_data1(instruction['mem_dir'],"S",data)
+				self.read_through(instruction['mem_dir'],'S',self._data1)
 			else:
-				data = self._cache_l2.read_l2_value(mem_dir=instruction['mem_dir'])
-				self.replace_data2(instruction['mem_dir'],"S",data)
+				self.read_through(instruction['mem_dir'],'S',self._data2)
 		self.notify_interface()
+
+	def read_through(self,mem_dir,state,selfData):
+		time.sleep(0.3)
+		self._semaphore.acquire()
+		time.sleep(5)
+		data = self._cache_l2.read_l2_value(mem_dir=mem_dir)
+		self.replace_data(mem_dir,state,data,selfData)
+		self._semaphore.release()
 			
+	def replace_data(self,mem_dir,state,data,selfData):
+		selfData['mem_dir'] = mem_dir
+		selfData['state']   = state
+		selfData['data']    = data
 
 	def replace_data1(self,mem_dir,state,data):
 		self._data1['mem_dir'] = mem_dir
