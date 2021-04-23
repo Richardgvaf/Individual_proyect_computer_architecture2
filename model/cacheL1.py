@@ -17,7 +17,7 @@ class cacheL1():
 
 		elif instruction['mem_dir'] == self._data2['mem_dir'] and self._data2['state'] == 'I':
 			self.read_through(instruction['mem_dir'],'S',self._data2) 
-			
+
 		elif (instruction['mem_dir'] != self._data1['mem_dir']) and (instruction['mem_dir'] != self._data2['mem_dir']):
 			if random.randint(0,99) < 50:
 				self.read_through(instruction['mem_dir'],'S',self._data1)

@@ -84,9 +84,9 @@ def mainProcessor(proc_number,semaforo,send_way1,send_way2,send_way3, recive_way
 						else:
 							print("jajajaja "+str(info))
 							interface.put(info)
-
-							manage_mem_instruction(info,cache_l1,semaforo,cache_l2)
 							notify(info,send_way1,send_way2,send_way3)
+							manage_mem_instruction(info,cache_l1,semaforo,cache_l2)
+							
 					time.sleep(0.1)
 			
 

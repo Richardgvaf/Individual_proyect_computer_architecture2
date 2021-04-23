@@ -44,8 +44,8 @@ class Application(tk.Frame):
     def display_game_mode(self):
         self._game_mode = 1
         self._game_mode_text = tk.StringVar()
-        self._game_mode_text.set("Manual mode")
         self._button_manual = tk.Button(text=self._game_mode_text, command=self.setMode)
+        self._game_mode_text.set("Manual_mode")
         self._button_manual.place(x=530, y=20,  width = 200, height = 30)
     def setMode(self):
         if self._game_mode == 1:
@@ -53,13 +53,15 @@ class Application(tk.Frame):
             self._to_P1.put('manual')
             self._to_P2.put('manual')
             self._to_P3.put('manual')
-            self._game_mode_text.set("Auto mode")
+            self._game_mode_text.set("Auto_mode")
+            self._game_mode = 0
         else:
             self._to_P0.put('auto')
             self._to_P1.put('auto')
             self._to_P2.put('auto')
             self._to_P3.put('auto')
-            self._game_mode_text.set("Manual mode")
+            self._game_mode_text.set("Manual_mode")
+            self._game_mode = 1
 
     def display_instruction_writer(self):
         self._entryText = tk.StringVar()
