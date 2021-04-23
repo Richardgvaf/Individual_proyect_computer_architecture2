@@ -63,7 +63,7 @@ def manage_mem_instruction(instruction,cache_l1,semaphore, cache_l2):
 	if instruction['action'] == 'read':
 		cache_l1.read_l1_value(instruction = instruction);
 
-def mainProcessor(proc_number,semaforo,send_way1,send_way2,send_way3, recive_way1,recive_way2,recive_way3,interface,cache_l2,memory):
+def mainProcessor(proc_number,semaforo,send_way1,send_way2,send_way3, recive_way1,recive_way2,recive_way3,interface,cache_l2,memory,interface_receive):
 	x = 0
 	lamb = int(proc_number)
 	cache_l1 = cacheL1(interface,semaforo,cache_l2)
@@ -71,15 +71,32 @@ def mainProcessor(proc_number,semaforo,send_way1,send_way2,send_way3, recive_way
 		#calculate the probability in each cycle that a delay appears 
 		probability  = calcProbability(lamb,x)
 		time_to_slep = 20-40*probability
-		
+		if interface_receive.qsize() != 0:
+			data = interface_receive.get()
+			print("this is the data " + str(data))
+			if data == "manual":
+				while data == "manual":
+					readNotify(cache_l1,recive_way1,recive_way2,recive_way3)
+					if interface_receive.qsize() != 0:
+						info = interface_receive.get()
+						if info == "auto":
+							data = info
+						else:
+							print("jajajaja "+str(info))
+							interface.put(info)
+
+							manage_mem_instruction(info,cache_l1,semaforo,cache_l2)
+							notify(info,send_way1,send_way2,send_way3)
+					time.sleep(0.1)
+			
+
+
 		instruction = generateInstruction(proc_number,probability)
 		interface.put(instruction)
 
 		manage_mem_instruction(instruction,cache_l1,semaforo,cache_l2)
-
 		notify(instruction,send_way1,send_way2,send_way3)
-		
-		print(instruction)
+
 		tiempo = 0
 		while tiempo < time_to_slep:
 			readNotify(cache_l1,recive_way1,recive_way2,recive_way3)

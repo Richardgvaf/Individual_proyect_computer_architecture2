@@ -14,11 +14,17 @@ class Application(tk.Frame):
         self._from_P2 = queue.Queue()
         self._from_P3 = queue.Queue()
 
+        #send messages to threads
+        self._to_P0 = queue.Queue()
+        self._to_P1 = queue.Queue()
+        self._to_P2 = queue.Queue()
+        self._to_P3 = queue.Queue()
+
         self._from_memory = queue.Queue()
 
         self._interface_queue = queue.Queue() 
         self._main_model = mainModel()
-        self._main_model.main_model(from_P0=self._from_P0,from_P1=self._from_P1,from_P2=self._from_P2,from_P3=self._from_P3,memory=self._from_memory);
+        self._main_model.main_model(from_P0=self._from_P0,from_P1=self._from_P1,from_P2=self._from_P2,from_P3=self._from_P3,memory=self._from_memory,to_P0=self._to_P0,to_P1=self._to_P1,to_P2=self._to_P2,to_P3=self._to_P3);
         self._processors = [0,0,0,0]
         self._caches = [0,0,0,0,0,0,0,0]
         self._l2_cache = [0,0,0,0]
@@ -31,7 +37,57 @@ class Application(tk.Frame):
         self.display_processor()
         self.display_l2_memory()
         self.display_memory()
+        self.display_instruction_writer()
+        self.display_game_mode()
         self.constant_check()
+
+    def display_game_mode(self):
+        self._game_mode = 1
+        self._game_mode_text = tk.StringVar()
+        self._game_mode_text.set("Manual mode")
+        self._button_manual = tk.Button(text=self._game_mode_text, command=self.setMode)
+        self._button_manual.place(x=530, y=20,  width = 200, height = 30)
+    def setMode(self):
+        if self._game_mode == 1:
+            self._to_P0.put('manual')
+            self._to_P1.put('manual')
+            self._to_P2.put('manual')
+            self._to_P3.put('manual')
+            self._game_mode_text.set("Auto mode")
+        else:
+            self._to_P0.put('auto')
+            self._to_P1.put('auto')
+            self._to_P2.put('auto')
+            self._to_P3.put('auto')
+            self._game_mode_text.set("Manual mode")
+
+    def display_instruction_writer(self):
+        self._entryText = tk.StringVar()
+        self._entry = tk.Entry(textvariable=self._entryText)
+        self._entry.place(x=20, y=20,  width = 200, height = 30)
+        self._button_send = tk.Button(text="Enviar instruction", command=self.send)
+        self._button_send.place(x=230, y=20,  width = 200, height = 30)
+
+
+    def send(self):
+        text = self._entryText.get()
+        text = text.split()
+        if text[1] == "write":
+            instruction = {'action':'write','mem_dir':text[2],'data':text[3] }
+        if text[1] == "read":
+            instruction = {'action':'read','mem_dir':text[2]}
+        if text[1] == "calc":
+            instruction = {'action':'calc'}
+        if text[0]== "P0":
+            self._to_P0.put(instruction)
+        if text[0]== "P1":
+            self._to_P1.put(instruction)
+        if text[0]== "P2":
+            self._to_P2.put(instruction)
+        if text[0]== "P3":
+            self._to_P3.put(instruction)
+        print(text)
+        self._entryText.set("")
 
     def instruction_processor(self,instruction):
         if instruction['action'] == "read":
@@ -110,7 +166,7 @@ class Application(tk.Frame):
     def display_background(self):
         imagen = PhotoImage(file = "images/fondo.png")
         background = tk.Label(image = imagen, text = "Imagen de fondo")
-        background.place(x = 0, y = 0, width = 600, height = 500)
+        background.place(x = 0, y = 0, width = 700, height = 500)
     def display_caches(self):
         x = 100
         y = 150
